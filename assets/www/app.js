@@ -3,35 +3,46 @@ var canvas;
 var width = 0;
 var height = 0;
 
+var frameRate = 25; // 25 frames each second
+
 fishArray = new Array();
 
 $(document).ready(function() {
-	width = $(window).width();
-	height = $(window).height();
+	width = window.innerWidth;
+	height = window.innerHeight;
  
 	$("#canvas").attr("width", width);
 	$("#canvas").attr("height", height);
 	canvas = $("#canvas").get(0);
 	
-	if(canvas)
-	{
-		init();
+	if(canvas) {
+		var query = window.location.search.substring(1);
+		console.log(query);
+		if (query.substring(0, 6) == "level=") {
+			var jsFile = "levels/" + query.substring(6) + ".js";
+			
+			// include js file according to different levels
+			var dynamicInclude = document.createElement("script");
+			dynamicInclude.src = jsFile;
+			dynamicInclude.type = "text/javascript";
+			document.getElementsByTagName("head")[0].appendChild(dynamicInclude);
+
+			// start game
+			init();
+		}
 	}
 });
 
 function init() {
-	createFish();
-	setInterval(draw, 100);
+	frameCnt = 0;
+	setInterval(draw, Math.ceil(1000 / frameRate));
 }
 
-var drawTimes = 0;
 function draw() {
-	drawTimes += 1;
-	if (drawTimes > 30) {
-		createFish();
-		drawTimes = 0;
-	}
-	
+	++frameCnt;
+	// check if to add or delete fish
+	fishManager();
+
 	var ctx = canvas.getContext('2d');
 	
 	ctx.globalCompositeOperation = "destination-over";
@@ -42,41 +53,29 @@ function draw() {
 		if (fishArray[i]) {
 			ctx.drawImage(fishArray[i].image, 
 				fishArray[i].left, fishArray[i].top,
-				fishArray[i].width, fishArray[i].height);
+				fishArray[i].image.width, fishArray[i].image.height);
 		
 			if (fishArray[i].left < width) {
-				fishArray[i].left += Math.ceil(Math.random() * 20);
+				fishArray[i].left += fishArray[i].speed;
 			} else {
 				delete fishArray[i];
 				--i;
-				--len;
 			}
 		}
 	}
 }
 
-function createFish() {
-	var fish = new SmallFish("red");
-	fish.top = Math.ceil(Math.random() * height);
-	fishArray.push(fish);
-}
-
 /*
  * Definition of classes
  */
-function Fish(imageSrc) {
+function SmallFish(size) {
 	this.image = new Image();
-	this.image.src = imageSrc;
+	this.image.src = "images/fish01-" + size + ".png"
 	
-	this.width = this.image.width;
-	this.height = this.image.height;
-	this.left = 0;
-	this.top = 0;
+	this.left = 0 - this.image.width;
+	this.top = Math.ceil(Math.random() * (height - this.image.height));
+	this.size = size;
+	this.speed = 20 / (size + 5);
 }
-
-function SmallFish(color) {
-	this.color = color;
-}
-SmallFish.prototype = new Fish("images/fish01.png");
 
 

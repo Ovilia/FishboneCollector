@@ -1,28 +1,48 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<title>PhoneGap</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		
 		<link rel="stylesheet" href="jquery.mobile/jquery.mobile-1.1.1.css" />
-		<link rel="stylesheet" href="app.css" />
 		
 		<script type="text/javascript" charset="utf-8" src="jquery.mobile/jquery.js"></script>
 		<script type="text/javascript" charset="utf-8" src="jquery.mobile/jquery.mobile-1.1.1.js"></script>
 		<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
 		
-		<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
-		
-		<script type="text/javascript" charset="utf-8" src="app.js"></script>
+		<script type="text/javascript">
+			function teachMode() {
+			}
+		</script>
 	</head>
 	<body>
-		<div data-role="page" id="page">
-			<!--div data-role="header">
-				<h1>Page Title</h1>
-			</div--><!-- /header -->
+		<div data-role="page" id="homePage">
+			<div data-role="header">
+				<h1>鱼骨爱好者</h1>
+			</div><!-- /header -->
 		
-			<div data-role="content" id="content">	
-				<canvas id="canvas">Canvas is not supported</canvas>
+			<div data-role="content" id="content">
+				<ul data-role="listview" data-inset="true">
+					<li>
+						<a href="#" data-transition="slide" rel="external" onclick="teachMode()">
+							教学模式
+						</a>
+					</li><li>
+						<a href="game.html" data-transition="slide" rel="external">
+							无限模式
+						</a>
+					</li><li>
+						<a href="game.html" data-transition="slide" rel="external">
+							休闲模式
+						</a>
+					</li>
+				</ul>
+				<ul data-role="listview" data-inset="true">
+					<li><a href="#">设置</a></li>
+					<li><a href="#">帮助</a></li>
+				</ul>
+				<a href="#" data-role="button">退出</a>
+					
 			</div><!-- /content -->
 		
 			<!--div data-role="footer">

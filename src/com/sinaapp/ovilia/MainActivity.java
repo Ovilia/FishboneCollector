@@ -1,8 +1,9 @@
-package com.example.fishbonecollector;
+package com.sinaapp.ovilia;
 
 import android.os.Bundle;
 import android.view.Menu;
 import com.phonegap.*;
+import com.sinaapp.ovilia.fishbonecollector.R;
 
 public class MainActivity extends DroidGap {
 
