@@ -6,4 +6,5 @@ function fishManager() {
 
 		fishArray.push(fish);
 	}
+	shallowHeight = 10 * Math.sin(frameCnt * 0.04) + 40;
 }
