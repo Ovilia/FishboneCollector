@@ -1,9 +1,9 @@
 $(document).ready(function() {
-	width = window.innerWidth;
-	height = window.innerHeight;
+	windowWidth = window.innerWidth;
+	windowHeight = window.innerHeight;
  
-	$("#canvas").attr("width", width);
-	$("#canvas").attr("height", height);
+	$("#canvas").attr("width", windowWidth);
+	$("#canvas").attr("height", windowHeight);
 	var canvas = $("#canvas").get(0);
 	
 	if(canvas) {
@@ -47,15 +47,15 @@ function init() {
 		isMousePressed = false;
 		var len = bubble.bubbleArray.length;
 		if (len > 0) {
-			bubble.bubbleArray[len - 1]["active"] = false;
+			bubble.bubbleArray[len - 1].active = false;
 		}
 	});
 	$('#canvas').mousemove(function(e) {
 		if (isMousePressed) {
 			var len = bubble.bubbleArray.length;
-			if (len > 0 && bubble.bubbleArray[len - 1]["active"] === true) {
-				bubble.bubbleArray[len - 1]["x"] = e.pageX;
-				bubble.bubbleArray[len - 1]["y"] = e.pageY;
+			if (len > 0 && bubble.bubbleArray[len - 1].active === true) {
+				bubble.bubbleArray[len - 1].x = e.pageX;
+				bubble.bubbleArray[len - 1].y = e.pageY;
 			}
 		}
 	});
@@ -66,34 +66,79 @@ function draw() {
 	// check if to add or delete fish
 	fishManager();
 	
-	ctx.clearRect(0, 0, width, height);
+	ctx.clearRect(0, 0, windowWidth, windowHeight);
 	
 	// background of sky and sea
 	// shallow sea
 	ctx.fillStyle = "#8ED6FF";
-	ctx.fillRect(0, 0, width, shallowHeight);
+	ctx.fillRect(0, 0, windowWidth, shallowHeight);
 	// deep sea
 	ctx.fillStyle = "#5483ca";
-	ctx.fillRect(0, shallowHeight, width, height - shallowHeight);
+	ctx.fillRect(0, shallowHeight, windowWidth, windowHeight - shallowHeight);
 	
 	// energy ball
 	ctx.drawImage(energy.image, 
-		width - energy.image.width - 15, height - energy.image.height - 15,
+		windowWidth - energy.image.width - 15, windowHeight - energy.image.height - 15,
 		energy.image.width, energy.image.height);
 		
 	// bubble
 	var len = bubble.bubbleArray.length;
 	for (var i = 0; i < len; ++i) {
-		var bWidth = bubble.bubbleArray[i]["energy"] * bubble.image.width;
-		var bHeight = bubble.bubbleArray[i]["energy"] * bubble.image.height;
-		ctx.drawImage(bubble.image,
-			bubble.bubbleArray[i]["x"] - bWidth / 2, bubble.bubbleArray[i]["y"] - bHeight / 2,
-			bWidth, bHeight);
+		if (bubble.bubbleArray[i]) {
+			// draw bubble
+			var bWidth = bubble.bubbleArray[i].energy * bubble.image.width;
+			var bHeight = bubble.bubbleArray[i].energy * bubble.image.height;
+			ctx.drawImage(bubble.image,
+				bubble.bubbleArray[i].x - bWidth / 2, bubble.bubbleArray[i].y - bHeight / 2,
+				bWidth, bHeight);
 			
-		if (bubble.bubbleArray[i]["active"] === false) {
-			// float up
-			bubble.bubbleArray[i]["x"] += Math.random() * 10 - 5;
-			bubble.bubbleArray[i]["y"] -= bubble.bubbleArray[i]["energy"] * 20;
+			// move if is not active
+			if (bubble.bubbleArray[i].active === false) {
+				// float up
+				bubble.bubbleArray[i].vy += bubble.bubbleArray[i].energy; 
+				bubble.bubbleArray[i].y -= bubble.bubbleArray[i].vy;
+				if (frameCnt % 3 == 0) {
+					bubble.bubbleArray[i].vx = Math.random() * 10 - 5;
+				}
+				bubble.bubbleArray[i].x += bubble.bubbleArray[i].vx;
+				
+				// delete those outside of the screen
+				if (bubble.bubbleArray[i].x < -bubble.image.width || 
+					bubble.bubbleArray[i].x > windowWidth ||
+					bubble.bubbleArray[i].y < -bubble.image.height || 
+					bubble.bubbleArray[i].y > windowHeight) {
+						delete bubble.bubbleArray[i];
+                        continue;
+				}
+			}
+			
+			// check if is covering a fish
+            var fLen = fishArray.length;
+            for (var j = 0; j < fLen; ++j) {
+	            if (fishArray[j] && fishArray[j].bubbleId == -1) {
+	            	var left = fishArray[j].left;
+	            	var right = left + fishArray[j].image.width;
+	            	var top = fishArray[j].top;
+	            	var bottom = top + fishArray[j].image.height;
+	            	// tolerance
+	            	left += fishArray[j].image.width / 10; 
+	            	right -= fishArray[j].image.width / 10;
+	            	top += fishArray[j].image.height / 10;
+	            	bottom -= fishArray[j].image.height / 10;
+	            	
+	            	var bRadius = bubble.image.width * bubble.bubbleArray[i].energy / 2;
+	            	var bLeft = bubble.bubbleArray[i].x - bRadius;
+	            	var bRight = bubble.bubbleArray[i].x + bRadius;
+	            	var bTop = bubble.bubbleArray[i].y - bRadius;
+	            	var bBottom = bubble.bubbleArray[i].y + bRadius;
+	            	
+	            	if (bLeft < left && bTop < top && bRight > right && bBottom > bottom) {
+                		fishArray[j].bubbleId = i;
+                		bubble.bubbleArray[i].active = false;
+                		break;
+                    }
+                }
+            }
 		}
 	}
 	// enlarge if mouse is pressed
@@ -105,16 +150,26 @@ function draw() {
 	len = fishArray.length;
 	for (var i = 0; i < len; ++i) {
 		if (fishArray[i]) {
+            if (fishArray[i].bubbleId == -1) {
+			    if (fishArray[i].left < windowWidth) {
+				    fishArray[i].left += fishArray[i].speed;
+			    } else {
+				    delete fishArray[i];
+				    --i;
+				    continue;
+                }
+			} else {
+                // covered by bubble, move with bubble
+                var id = fishArray[i].bubbleId;
+                var bb = bubble.bubbleArray[id];
+                if (bb) {
+	                fishArray[i].left = bb.x - fishArray[i].image.width / 2;
+	                fishArray[i].top = bb.y - fishArray[i].image.height / 2;
+	            }
+            }
 			ctx.drawImage(fishArray[i].image, 
 				fishArray[i].left, fishArray[i].top,
 				fishArray[i].image.width, fishArray[i].image.height);
-		
-			if (fishArray[i].left < width) {
-				fishArray[i].left += fishArray[i].speed;
-			} else {
-				delete fishArray[i];
-				--i;
-			}
 		}
 	}
 }
@@ -140,10 +195,13 @@ function SmallFish(size) {
 	this.image.src = "images/fish01-" + size + ".png"
 	
 	this.left = 0 - this.image.width;
-	this.top = Math.ceil(Math.random() * (height - this.image.height));
+	this.top = Math.ceil(Math.random() * (windowHeight - this.image.height));
 	this.size = size;
 	this.speed = 20 / (size + 5);
 	
+	// if covered by a bubble, bubbleId is the index in bubbleArray
+	// if not, bubbleId is -1
+	this.bubbleId = -1;
 }
 
 function EnergyManager() {
@@ -159,8 +217,10 @@ function BubbleManager() {
 	
 	this.addBubble = function(x, y) {
 		var bubble = {
-			"x": x,
+			"x": x, // x and y is the center of bubble
 			"y": y,
+			"vx": 0,
+			"vy": 0,
 			"energy": 1.0 / 6.0, 
 			"active": true // those active ones can be enlarged
 		};
@@ -170,12 +230,12 @@ function BubbleManager() {
 	this.enlargeBubble = function() {
 		// only the last one bubble can be active in bubbleArray
 		var len = this.bubbleArray.length;
-		if (this.bubbleArray[len - 1]["active"] === true) {
-			this.bubbleArray[len - 1]["energy"] += 1.0 / 32.0;
+		if (this.bubbleArray[len - 1].active === true) {
+			this.bubbleArray[len - 1].energy += 1.0 / 32.0;
 		}
-		if (this.bubbleArray[len - 1]["energy"] >= 1.0) {
+		if (this.bubbleArray[len - 1].energy >= 1.0) {
 			// energy is full
-			this.bubbleArray[len - 1]["energy"] = 1.0;
+			this.bubbleArray[len - 1].energy = 1.0;
 		}
 	};
 }
