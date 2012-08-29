@@ -67,16 +67,9 @@ function debug() {
 	});
 	$(document).keypress(function(e) {
 		if (e.which == 122) { // z to move left
-			board.left -= 20;
-			var max = windowWidth - board.image.width;
-			if (board.left > max) {
-				board.left = max;
-			}
+			board.vx -= 10;
 		} else if (e.which == 120) { // x to move right
-			board.left += 20;
-			if (board.left < 0) {
-				board.left = 0;
-			}
+			board.vx += 10;
 		}
 	});
 }
@@ -114,11 +107,12 @@ function draw() {
 	ctx.fillRect(0, game.shallowHeight, windowWidth, windowHeight - game.shallowHeight);
 	
 	// energy ball
-	energy.draw();
 	energy.addOrdEnergy();
+	energy.draw();
 	
 	// board
-	ctx.drawImage(board.image, board.left, board.top, board.image.width, board.image.height);
+	board.move();
+	board.draw();
 		
 	// bubble
 	var len = bubble.bubbleArray.length;
@@ -315,7 +309,7 @@ function SmallFish(size) {
 	this.image.src = "images/fish01-" + size + ".png"
 	
 	this.left = 0 - this.image.width;
-	this.top = Math.ceil(Math.random() * (windowHeight - this.image.height));
+	this.top = Math.ceil(Math.random() * (windowHeight - this.image.height - 200)) + 200;
 	this.size = size;
 	this.vx = 20 / (size + 5);
 	this.vy = 0;
@@ -378,7 +372,6 @@ function GameManager() {
 	// height of shallow sea
 	this.shallowHeight = 20;
 	// height of deep sea is the rest
-	
 }
  
  
@@ -406,7 +399,7 @@ function EnergyManager() {
 	this.draw = function() {
 		ctx.drawImage(this.image, this.left, this.top,
 			this.image.width, this.image.height);
-		ctx.fillStyle = this.color[Math.ceil(this.ordEnergy * (this.color.length - 1))];
+		ctx.fillStyle = "hsl(" + Math.floor(this.ordEnergy * 90) + ", 50%, 50%)";
 		ctx.beginPath();
 		ctx.moveTo(this.centerX, this.centerY);
 		ctx.arc(this.centerX, this.centerY, this.innerRadius,
@@ -484,15 +477,61 @@ BubbleManager.prototype.image.src = "images/bubble.png";
 
 
 function BoardManager() {
+	this.boardWidth = 200; // contain head part
+	this.boardHeight = 50;
+	this.thickness = 10;
+	this.left = Math.ceil((windowWidth - this.boardWidth) / 2);
+	
+	this.vx = 0;
+	
+	this.move = function() {
+		this.left += this.vx;
+		if (this.left < 0) {
+			this.left = 0;
+		} else if (this.left > windowWidth - this.boardWidth) {
+			this.left = windowWidth - this.boardWidth;
+		}
+		
+		// resistance force
+		if (Math.abs(this.vx) < 0.01) {
+			this.vx = 0;
+		} else {
+			this.vx *= 0.9;
+		}
+	}
+	
+	this.draw = function() {
+		// head
+		ctx.beginPath();
+		ctx.arc(this.left + this.headRadius, this.top + this.headRadius,
+			    this.headRadius, 0, 2 * Math.PI, false);
+		ctx.fillStyle = "hsl(" + (game.frameCnt % 256) + ", 50%, 50%)";
+		ctx.fill();
+		
+		// tail
+		var left = this.left + this.headRadius;
+		var top = this.top + this.headRadius;
+		var right = this.left + this.boardWidth - this.thickness;
+		var bottom = top + this.thickness;
+		ctx.beginPath();
+		ctx.arc(right, top + this.thickness / 2, this.thickness / 2,
+			0, 2 * Math.PI, false);
+		ctx.fill();
+		ctx.fillRect(left, top, right - left, this.thickness);
+		
+		// face
+		ctx.drawImage(this.image, this.left, this.top,
+			this.image.width, this.image.height);
+	};
 }
 BoardManager.prototype.image = new Image();
 BoardManager.prototype.image.onload = function() {
 	BoardManager.prototype.marginBottom = 20;
 	BoardManager.prototype.top = windowHeight - 
 		BoardManager.prototype.image.height - BoardManager.prototype.marginBottom;
-	BoardManager.prototype.left = Math.ceil((windowWidth - BoardManager.prototype.image.width) / 2);
+	BoardManager.prototype.headRadius = BoardManager.prototype.image.width / 2;
 }
-BoardManager.prototype.image.src = "images/board.png";
+BoardManager.prototype.image.src = "images/face.png";
 
 
 	
