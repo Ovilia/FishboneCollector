@@ -20,17 +20,7 @@ $(document).ready(function() {
 });
 
 function init() {
-	frameRate = 25; // 25 frames each second
-	frameCnt = 0;
-	
-	fishArray = new Array();
-	
-	// height of sky
-	skyHeight = 0;
-	// height of shallow sea
-	shallowHeight = 20;
-	// height of deep sea is the rest
-	
+	game = new GameManager();
 	energy = new EnergyManager();
 	bubble = new BubbleManager();
 	
@@ -42,7 +32,31 @@ function init() {
 	// only for debug on web page
 	$('#canvas').mousedown(function(e) {
 		isMousePressed = true;
-		bubble.addBubble(e.pageX, e.pageY);
+		var x = e.pageX;
+		var y = e.pageY;
+		
+		// check if touch within bubble
+		var withinBbId = -1;
+		var len = bubble.bubbleArray.length;
+		for (var i = 0; i < len; ++i) {
+			// not active
+			if (bubble.bubbleArray[i] && bubble.bubbleArray[i].active === false &&
+				// covering fish
+				bubble.bubbleArray[i].fish.length > 0 &&
+				// touch within bubble
+				(Math.abs(bubble.bubbleArray[i].x - x) < bubble.bubbleArray[i].energy * bubble.image.width) &&
+				(Math.abs(bubble.bubbleArray[i].y - y) < bubble.bubbleArray[i].energy * bubble.image.height)) {
+					withinBbId = i;
+					break;
+			}
+		}
+		if (withinBbId == -1) {
+			// not within bubble, add a bubble
+			bubble.addBubble(x, y);
+		} else {
+			// touch within bubble will break the bubble
+			bubble.breakBubble(withinBbId);
+		}
 	});
 	$('#canvas').mouseup(function(e) {
 		isMousePressed = false;
@@ -62,11 +76,11 @@ function init() {
 		}
 	});
 	
-	setInterval(draw, Math.ceil(1000 / frameRate));
+	setInterval(draw, Math.ceil(1000 / game.frameRate));
 }
 
 function draw() {
-	++frameCnt;
+	++game.frameCnt;
 	// check if to add or delete fish
 	fishManager();
 	
@@ -75,10 +89,10 @@ function draw() {
 	// background of sky and sea
 	// shallow sea
 	ctx.fillStyle = "#8ED6FF";
-	ctx.fillRect(0, 0, windowWidth, shallowHeight);
+	ctx.fillRect(0, 0, windowWidth, game.shallowHeight);
 	// deep sea
 	ctx.fillStyle = "#5483ca";
-	ctx.fillRect(0, shallowHeight, windowWidth, windowHeight - shallowHeight);
+	ctx.fillRect(0, game.shallowHeight, windowWidth, windowHeight - game.shallowHeight);
 	
 	// energy ball
 	energy.draw();
@@ -98,9 +112,9 @@ function draw() {
 			// move if is not active
 			if (bubble.bubbleArray[i].active === false) {
 				// float up
-				bubble.bubbleArray[i].vy += bubble.bubbleArray[i].energy; 
+				bubble.bubbleArray[i].vy += bubble.bubbleArray[i].energy * 0.08;
 				bubble.bubbleArray[i].y -= bubble.bubbleArray[i].vy;
-				if (frameCnt % 3 == 0) {
+				if (game.frameCnt % 3 == 0) {
 					bubble.bubbleArray[i].vx = Math.random() * 10 - 5;
 				}
 				bubble.bubbleArray[i].x += bubble.bubbleArray[i].vx;
@@ -116,18 +130,18 @@ function draw() {
 			}
 			
 			// check if is covering a fish
-            var fLen = fishArray.length;
+            var fLen = game.fishArray.length;
             for (var j = 0; j < fLen; ++j) {
-	            if (fishArray[j] && fishArray[j].bubbleId == -1) {
-	            	var left = fishArray[j].left;
-	            	var right = left + fishArray[j].image.width;
-	            	var top = fishArray[j].top;
-	            	var bottom = top + fishArray[j].image.height;
+	            if (game.fishArray[j] && game.fishArray[j].bubbleId == -1) {
+	            	var left = game.fishArray[j].left;
+	            	var right = left + game.fishArray[j].image.width;
+	            	var top = game.fishArray[j].top;
+	            	var bottom = top + game.fishArray[j].image.height;
 	            	// tolerance
-	            	left += fishArray[j].image.width / 10; 
-	            	right -= fishArray[j].image.width / 10;
-	            	top += fishArray[j].image.height / 10;
-	            	bottom -= fishArray[j].image.height / 10;
+	            	left += game.fishArray[j].image.width / 10; 
+	            	right -= game.fishArray[j].image.width / 10;
+	            	top += game.fishArray[j].image.height / 10;
+	            	bottom -= game.fishArray[j].image.height / 10;
 	            	
 	            	var bRadius = bubble.image.width * bubble.bubbleArray[i].energy / 2;
 	            	var bLeft = bubble.bubbleArray[i].x - bRadius;
@@ -136,9 +150,10 @@ function draw() {
 	            	var bBottom = bubble.bubbleArray[i].y + bRadius;
 	            	
 	            	if (bLeft < left && bTop < top && bRight > right && bBottom > bottom) {
-                		fishArray[j].bubbleId = i;
+                		game.fishArray[j].bubbleId = i;
                 		bubble.bubbleArray[i].active = false;
-                		break;
+                		bubble.bubbleArray[i].fish.push(j);
+                		bubble.bubbleArray[i].vy = 0;
                     }
                 }
             }
@@ -150,29 +165,55 @@ function draw() {
 	}
 	
 	// fish
-	len = fishArray.length;
+	len = game.fishArray.length;
 	for (var i = 0; i < len; ++i) {
-		if (fishArray[i]) {
-            if (fishArray[i].bubbleId == -1) {
-			    if (fishArray[i].left < windowWidth) {
-				    fishArray[i].left += fishArray[i].speed;
-			    } else {
-				    delete fishArray[i];
-				    --i;
+		if (game.fishArray[i]) {
+			game.fishArray[i].move();
+            if (game.fishArray[i].bubbleId == -1) {
+            	// move as not covered by bubble
+			    if (game.fishArray[i].left > windowWidth) {
+				    delete game.fishArray[i];
 				    continue;
                 }
+			} else if (game.fishArray[i].isDropping) {
+				// check if touches ground
+				if (game.fishArray[i].top + game.fishArray[i].image.height >= windowHeight) {
+					// TODO: effect here
+					delete game.fishArray[i];
+					continue;
+				}
 			} else {
                 // covered by bubble, move with bubble
-                var id = fishArray[i].bubbleId;
+                var id = game.fishArray[i].bubbleId;
                 var bb = bubble.bubbleArray[id];
                 if (bb) {
-	                fishArray[i].left = bb.x - fishArray[i].image.width / 2;
-	                fishArray[i].top = bb.y - fishArray[i].image.height / 2;
+	                game.fishArray[i].left = bb.x - game.fishArray[i].image.width / 2;
+	                game.fishArray[i].top = bb.y - game.fishArray[i].image.height / 2;
+	                
+	                // change to be bone
+	                game.fishArray[i].toBone();
 	            }
             }
-			ctx.drawImage(fishArray[i].image, 
-				fishArray[i].left, fishArray[i].top,
-				fishArray[i].image.width, fishArray[i].image.height);
+            var width = game.fishArray[i].image.width;
+            var height = game.fishArray[i].image.height;
+            var left = game.fishArray[i].left;
+            var top = game.fishArray[i].top;
+            var boneWidth = width * game.fishArray[i].bonePercent;
+            if (game.fishArray[i].isAllFish) {
+            	// draw fish
+				ctx.drawImage(game.fishArray[i].image, left, top, width, height);
+			} else if (game.fishArray[i].isAllBone) {
+				// draw bone
+				ctx.drawImage(SmallFish.prototype.boneImage, left, top, boneWidth, height);
+			} else {
+				// draw fish and bone
+				ctx.drawImage(SmallFish.prototype.boneImage, 
+					0, 0, SmallFish.prototype.boneImage.width * game.fishArray[i].bonePercent, 
+					SmallFish.prototype.boneImage.height, left, top, boneWidth, height);
+				ctx.drawImage(game.fishArray[i].image, 
+					boneWidth, 0, width - boneWidth, height, left + boneWidth, 
+					top, width - boneWidth, height);
+			}
 		}
 	}
 }
@@ -184,7 +225,25 @@ function onDeviceReady() {
 	document.addEventListener("touchstart", function(e){
 		e.preventDefault();
 		isMousePressed = true;
-		bubble.addBubble(e.changedTouches[0].pageX, e.changedTouches[0].pageY);
+		var x = e.changedTouches[0].pageX;
+		var y = e.changedTouches[0].pageY;
+		
+		
+		var withinBbId = -1;
+		var len = bubble.bubbleArray.length;
+		for (var i = 0; i < len; ++i) {
+			if (Math.abs(bubble.bubbleArray[i].x - x) < bubble.bubbleArray[i].energy * bubble.image.width) {
+				withinBbId = i;
+				break;
+			}
+		}
+		if (withinBbId == -1) {
+			// not within bubble, add a bubble
+			bubble.addBubble(x, y);
+		} else {
+			// touch within bubble will break the bubble
+			bubble.breakBubble(withinBbId);
+		}
 	}, false);
     document.addEventListener('touchmove', function(e) {
 		if (isMousePressed) {
@@ -223,17 +282,72 @@ function SmallFish(size) {
 	this.left = 0 - this.image.width;
 	this.top = Math.ceil(Math.random() * (windowHeight - this.image.height));
 	this.size = size;
-	this.speed = 20 / (size + 5);
+	this.vx = 20 / (size + 5);
+	this.vy = 0;
+	this.ay = 0;
 	
 	// if covered by a bubble, bubbleId is the index in bubbleArray
 	// if not, bubbleId is -1
 	this.bubbleId = -1;
-}
-
-function EnergyManager() {
-	this.image = new Image();
-	this.image.src = "images/energy.png";
 	
+	// 0 if is fish, 1 if is bone
+	this.bonePercent = 0;
+	this.isAllFish = true;
+	this.isAllBone = false;
+	this.toBone = function() {
+		this.isAllFish = false;
+		if (this.isAllBone === false) {
+			this.bonePercent += 0.5 / (size + 10);
+			if (this.bonePercent >= 1.0) {
+				this.bonePercent = 1.0;
+				this.isAllBone = true;
+			}
+		}
+	};
+	
+	// drop when touched after become bone
+	this.isDropping = false;
+	this.startDrop = function() {
+		this.isDropping = true;
+		this.vx = 0;
+		this.vy = 4.0;
+		this.ay = -0.2;
+	}
+	
+	this.floatUp = function() {
+		this.vx = 0;
+		this.vy = 4.0;
+		this.ay = 0.2;
+	}
+	
+	this.move = function() {
+		this.vy += this.ay;
+		this.left += this.vx;
+		this.top -= this.vy;
+	}
+}
+SmallFish.prototype.boneImage = new Image();
+SmallFish.prototype.boneImage.src = "images/fishbone.png";
+
+
+
+function GameManager() {
+	this.frameRate = 25; // 25 frames each second
+	this.frameCnt = 0;
+	
+	this.fishArray = new Array();
+	this.fishTotal = 0;
+	
+	// height of sky
+	this.skyHeight = 0;
+	// height of shallow sea
+	this.shallowHeight = 20;
+	// height of deep sea is the rest
+}
+ 
+ 
+ 
+function EnergyManager() {
 	this.margin = 15;
 	this.radius = 50;
 	this.innerRadius = 25;
@@ -266,11 +380,12 @@ function EnergyManager() {
 		ctx.fill();
 	}
 }
+EnergyManager.prototype.image = new Image();
+EnergyManager.prototype.image.src = "images/energy.png";
+
+
 
 function BubbleManager() {
-	this.image = new Image();
-	this.image.src = "images/bubble.png";
-	
 	this.bubbleArray = new Array();
 	
 	this.addBubble = function(x, y) {
@@ -281,8 +396,9 @@ function BubbleManager() {
 				"y": y,
 				"vx": 0,
 				"vy": 0,
-				"energy": delta, 
-				"active": true // those active ones can be enlarged
+				"energy": delta, // 0.0 to 1.0
+				"active": true, // those active ones can be enlarged
+				"fish": [] // covered fish
 			};
 			this.bubbleArray.push(newBubble);
 			energy.ordEnergy -= delta;
@@ -307,4 +423,25 @@ function BubbleManager() {
 			}
 		}
 	};
+	
+	this.breakBubble = function(index) {
+		if (index < this.bubbleArray.length && this.bubbleArray[index]) {
+			var b = this.bubbleArray[index];
+			var fLen = b.fish.length;
+			for (var i = 0; i < fLen; ++i) {
+				if (game.fishArray[b.fish[i]]) {
+					if (game.fishArray[b.fish[i]].isAllBone) {
+						game.fishArray[b.fish[i]].startDrop();
+					} else {
+						// fish that is not all bone will still float up
+						game.fishArray[b.fish[i]].floatUp();
+					}
+				}
+			}
+			delete this.bubbleArray[index];
+		}
+	};
 }
+BubbleManager.prototype.image = new Image();
+BubbleManager.prototype.image.src = "images/bubble.png";
+	
