@@ -98,11 +98,19 @@
        gradientUnits="userSpaceOnUse" />
     <filter
        inkscape:collect="always"
-       id="filter3926">
+       id="filter4352">
       <feGaussianBlur
          inkscape:collect="always"
-         stdDeviation="3.8382182"
-         id="feGaussianBlur3928" />
+         stdDeviation="13.430249"
+         id="feGaussianBlur4354" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       id="filter4368">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="5.4831689"
+         id="feGaussianBlur4370" />
     </filter>
   </defs>
   <sodipodi:namedview
@@ -113,9 +121,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.90028971"
-     inkscape:cx="305.79365"
+     inkscape:cx="221.81228"
      inkscape:cy="222.67151"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer2"
      inkscape:document-units="px"
      showgrid="false"
      showguides="true"
@@ -142,10 +150,23 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer"
+     style="display:none">
+    <rect
+       style="fill:#2ad4ff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3826"
+       width="522.0542"
+       height="409.86807"
+       x="58.869938"
+       y="43.473854" />
+  </g>
   <g
      id="layer1"
      inkscape:label="Layer 1"
@@ -153,7 +174,7 @@
      style="display:inline">
     <path
        sodipodi:type="arc"
-       style="fill:url(#radialGradient3896);stroke:none;stroke-opacity:1;fill-opacity:1.0"
+       style="fill:url(#radialGradient3896);stroke:none;stroke-opacity:1;fill-opacity:1;filter:url(#filter4352);opacity:0.76293103"
        id="path3071"
        sodipodi:cx="85.528023"
        sodipodi:cy="39.030838"
@@ -163,7 +184,7 @@
        transform="matrix(0.80410726,-0.00804175,0.00804175,0.80410726,256.08004,215.61212)" />
     <path
        sodipodi:type="arc"
-       style="fill:url(#radialGradient3863);fill-opacity:1;stroke:url(#radialGradient3904);stroke-opacity:1;opacity:1;filter:url(#filter3926)"
+       style="fill:url(#radialGradient3863);fill-opacity:1;stroke:url(#radialGradient3904);stroke-opacity:1;opacity:1;filter:url(#filter4368)"
        id="path3851"
        sodipodi:cx="380.43311"
        sodipodi:cy="238.4111"

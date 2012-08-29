@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.2 r9819"
+   sodipodi:docname="board.svg">
+  <defs
+     id="defs4">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient5248">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop5250" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop5252" />
+    </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient5248"
+       id="radialGradient5254"
+       cx="379.71206"
+       cy="812.43972"
+       fx="379.71206"
+       fy="812.43972"
+       r="272.47914"
+       gradientTransform="matrix(1,0,0,0.07041256,0,755.23376)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.06"
+     inkscape:cx="393.49458"
+     inkscape:cy="348.41412"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1280"
+     inkscape:window-height="752"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#ffff00;fill-opacity:1;fill-rule:nonzero;stroke:url(#radialGradient5254);stroke-opacity:1;stroke-linejoin:round;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none"
+       id="path2997"
+       d="m 116.03774,802.19473 c 10.56999,-1.07196 21.11448,-2.4352 31.70997,-3.21588 21.72068,-1.60039 43.44434,-3.54802 65.22063,-3.926 83.34765,-1.44672 137.97289,2.59077 222.62436,7.04199 58.8352,3.09372 122.84691,6.7744 182.32171,10.15242 7.92296,0.4135 15.84592,0.82699 23.76888,1.24049 11.44109,-0.82907 12.27263,10.64622 0.83154,11.47528 l 0,0 c -8.35063,1.59274 -16.70125,3.18548 -25.05188,4.77822 -91.70648,0.45084 -76.46648,1.57198 -183.24433,-4.47021 -79.68311,-4.509 -141.86362,-10.99217 -220.77186,-13.71273 -21.64322,-0.7462 -43.31216,-0.24252 -64.96805,-0.15242 -10.81516,0.045 -21.62732,0.37181 -32.44097,0.55771 -9.73977,0 -9.73977,-9.76887 0,-9.76887 z"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/Users/ovilia/Pictures/PS/board.png"
+       inkscape:export-xdpi="32.826267"
+       inkscape:export-ydpi="32.826267" />
+  </g>
+</svg>

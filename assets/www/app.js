@@ -19,17 +19,7 @@ $(document).ready(function() {
 	}
 });
 
-function init() {
-	game = new GameManager();
-	energy = new EnergyManager();
-	bubble = new BubbleManager();
-	
-	document.addEventListener('deviceready', onDeviceReady, false);
-    
-	isPaused = false;
-	isMousePressed = false;
-	
-	// only for debug on web page
+function debug() {
 	$('#canvas').mousedown(function(e) {
 		isMousePressed = true;
 		var x = e.pageX;
@@ -75,6 +65,35 @@ function init() {
 			}
 		}
 	});
+	$(document).keypress(function(e) {
+		if (e.which == 122) { // z to move left
+			board.left -= 20;
+			var max = windowWidth - board.image.width;
+			if (board.left > max) {
+				board.left = max;
+			}
+		} else if (e.which == 120) { // x to move right
+			board.left += 20;
+			if (board.left < 0) {
+				board.left = 0;
+			}
+		}
+	});
+}
+
+function init() {
+	game = new GameManager();
+	energy = new EnergyManager();
+	bubble = new BubbleManager();
+	board = new BoardManager();
+	
+	document.addEventListener('deviceready', onDeviceReady, false);
+    
+	isPaused = false;
+	isMousePressed = false;
+	
+	// only for debug on web page
+	debug();
 	
 	setInterval(draw, Math.ceil(1000 / game.frameRate));
 }
@@ -97,6 +116,9 @@ function draw() {
 	// energy ball
 	energy.draw();
 	energy.addOrdEnergy();
+	
+	// board
+	ctx.drawImage(board.image, board.left, board.top, board.image.width, board.image.height);
 		
 	// bubble
 	var len = bubble.bubbleArray.length;
@@ -176,9 +198,16 @@ function draw() {
 				    continue;
                 }
 			} else if (game.fishArray[i].isDropping) {
-				// check if touches ground
-				if (game.fishArray[i].top + game.fishArray[i].image.height >= windowHeight) {
+				// check if touches board
+				if (game.fishArray[i].top + game.fishArray[i].image.height >= board.top &&
+						game.fishArray[i].left > board.left && 
+						game.fishArray[i].left + game.fishArray[i].image.width < board.left + board.image.width) {
+					console.log("get one");
+					delete game.fishArray[i];
+					continue;
+				} else if (game.fishArray[i].top > windowHeight) {
 					// TODO: effect here
+					console.log("miss one");
 					delete game.fishArray[i];
 					continue;
 				}
@@ -228,13 +257,19 @@ function onDeviceReady() {
 		var x = e.changedTouches[0].pageX;
 		var y = e.changedTouches[0].pageY;
 		
-		
+		// check if touch within bubble
 		var withinBbId = -1;
 		var len = bubble.bubbleArray.length;
 		for (var i = 0; i < len; ++i) {
-			if (Math.abs(bubble.bubbleArray[i].x - x) < bubble.bubbleArray[i].energy * bubble.image.width) {
-				withinBbId = i;
-				break;
+			// not active
+			if (bubble.bubbleArray[i] && bubble.bubbleArray[i].active === false &&
+				// covering fish
+				bubble.bubbleArray[i].fish.length > 0 &&
+				// touch within bubble
+				(Math.abs(bubble.bubbleArray[i].x - x) < bubble.bubbleArray[i].energy * bubble.image.width) &&
+				(Math.abs(bubble.bubbleArray[i].y - y) < bubble.bubbleArray[i].energy * bubble.image.height)) {
+					withinBbId = i;
+					break;
 			}
 		}
 		if (withinBbId == -1) {
@@ -335,7 +370,7 @@ function GameManager() {
 	this.frameRate = 25; // 25 frames each second
 	this.frameCnt = 0;
 	
-	this.fishArray = new Array();
+	this.fishArray = [];
 	this.fishTotal = 0;
 	
 	// height of sky
@@ -343,6 +378,7 @@ function GameManager() {
 	// height of shallow sea
 	this.shallowHeight = 20;
 	// height of deep sea is the rest
+	
 }
  
  
@@ -352,7 +388,7 @@ function EnergyManager() {
 	this.radius = 50;
 	this.innerRadius = 25;
 	this.left = windowWidth - this.radius * 2 - this.margin;
-	this.top = windowHeight - this.radius * 2 - this.margin;
+	this.top = this.margin;
 	this.centerX = this.left + this.radius;
 	this.centerY = this.top + this.radius;
 	
@@ -444,4 +480,19 @@ function BubbleManager() {
 }
 BubbleManager.prototype.image = new Image();
 BubbleManager.prototype.image.src = "images/bubble.png";
+
+
+
+function BoardManager() {
+}
+BoardManager.prototype.image = new Image();
+BoardManager.prototype.image.onload = function() {
+	BoardManager.prototype.marginBottom = 20;
+	BoardManager.prototype.top = windowHeight - 
+		BoardManager.prototype.image.height - BoardManager.prototype.marginBottom;
+	BoardManager.prototype.left = Math.ceil((windowWidth - BoardManager.prototype.image.width) / 2);
+}
+BoardManager.prototype.image.src = "images/board.png";
+
+
 	
