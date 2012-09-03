@@ -15,6 +15,7 @@
 				window.localStorage.setItem("level", "1");
 				window.localStorage.setItem("windowWidth", $(window).width());
 				window.localStorage.setItem("windowHeight", $(window).height());
+				window.JsHelper.goToHtml("game.html");
 			}
 		</script>
 	</head>
@@ -27,11 +28,11 @@
 			<div data-role="content" id="content">
 				<ul data-role="listview" data-inset="true">
 					<li>
-						<a href="game.html" data-transition="slide" rel="external" onclick="teachMode()">
+						<a href="#" data-transition="slide" rel="external" onclick="teachMode()">
 							教学模式
 						</a>
 					</li><li>
-						<a href="game.html" data-transition="slide" rel="external">
+						<a href="test.html" data-transition="slide" rel="external">
 							无限模式
 						</a>
 					</li><li>
