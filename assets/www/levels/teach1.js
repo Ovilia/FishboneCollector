@@ -1,6 +1,6 @@
 // check if to add or delete fish
 function fishManager() {
-	if (game.frameCnt % (2 * game.frameRate) == 0) { // add fish each 2 sec
+	if (game.frameCnt % (1 * game.frameRate) == 0) { // add fish each sec
 		var id = Math.floor(Math.random() * 7) + 1;
 		var fish = new SmallFish(id);
 
