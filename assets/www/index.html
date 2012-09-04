@@ -15,7 +15,13 @@
 				window.localStorage.setItem("level", "1");
 				window.localStorage.setItem("windowWidth", $(window).width());
 				window.localStorage.setItem("windowHeight", $(window).height());
-				window.JsHelper.goToHtml("game.html");
+				//navigator.app.loadUrl('file:///android_asset/www/game.html');
+				var userAgent = navigator.userAgent.toLowerCase();
+				if (userAgent.match(/android/)) {
+					window.JsHelper.goToHtml("game.html");
+				} else {
+					window.location.href = "game.html";
+				}
 			}
 		</script>
 	</head>

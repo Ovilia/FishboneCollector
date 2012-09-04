@@ -8,19 +8,22 @@ $(document).ready(function() {
 	if(canvas) {
 		ctx = canvas.getContext('2d');
 		
-		// level information in local storage
-		var level = window.localStorage.getItem("level");
-		var script = document.createElement('script');
-		script.src = "levels/teach" + level + ".js";
-		script.type = 'text/javascript';
-		$('head')[0].appendChild(script);
-		init();
+		//document.addEventListener('deviceready', onDeviceReady, false);
+		onDeviceReady();
+		
+		// only for debug on web page
+		var userAgent = navigator.userAgent.toLowerCase();
+		if (!userAgent.match(/android/)) {
+			init();
+			debug();
+		}
+	
 	}
 });
 
 function debug() {
 	$('#canvas').mousedown(function(e) {
-		isMousePressed = true;
+		game.isMousePressed = true;
 		var x = e.pageX;
 		var y = e.pageY;
 		
@@ -48,14 +51,14 @@ function debug() {
 		}
 	});
 	$('#canvas').mouseup(function(e) {
-		isMousePressed = false;
+		game.isMousePressed = false;
 		var len = bubble.bubbleArray.length;
 		if (len > 0 && bubble.bubbleArray[len - 1]) {
 			bubble.bubbleArray[len - 1].active = false;
 		}
 	});
 	$('#canvas').mousemove(function(e) {
-		if (isMousePressed) {
+		if (game.isMousePressed) {
 			var len = bubble.bubbleArray.length;
 			if (len > 0 && bubble.bubbleArray[len - 1] &&
 					bubble.bubbleArray[len - 1].active === true) {
@@ -74,13 +77,14 @@ function debug() {
 }
 
 function onDeviceReady() {
-alert("ready");
-	document.addEventListener("pause", onPause, false);
-	document.addEventListener("resume", onResume, false);
+	//alert("ready");
+	init();
+	
+    accelerator.startWatch();
 	
 	document.body.addEventListener("touchstart", function(e){
 		e.preventDefault();
-		isMousePressed = true;
+		game.isMousePressed = true;
 		var x = e.changedTouches[0].pageX;
 		var y = e.changedTouches[0].pageY;
 		
@@ -108,7 +112,7 @@ alert("ready");
 		}
 	}, false);
     document.body.addEventListener('touchmove', function(e) {
-		if (isMousePressed) {
+		if (game.isMousePressed) {
 			var len = bubble.bubbleArray.length;
 			if (len > 0 && bubble.bubbleArray[len - 1] &&
 					bubble.bubbleArray[len - 1].active === true) {
@@ -118,35 +122,29 @@ alert("ready");
 		}
     }, false);
     document.body.addEventListener('touchend', function(e) {
-		isMousePressed = false;
+		game.isMousePressed = false;
 		var len = bubble.bubbleArray.length;
 		if (len > 0 && bubble.bubbleArray[len - 1]) {
 			bubble.bubbleArray[len - 1].active = false;
 		}
     }, false);
     
-    accelerator.startWatch();
 }
 
 function init() {
+	// level information in local storage
+	var level = window.localStorage.getItem("level");
+	var script = document.createElement('script');
+	script.src = "levels/teach" + level + ".js";
+	script.type = 'text/javascript';
+	$('head')[0].appendChild(script);
+
 	game = new GameManager();
 	energy = new EnergyManager();
 	bubble = new BubbleManager();
 	board = new BoardManager();
 	accelerator = new AcceleratorManager();
 	score = new ScoreManager();
-	
-	document.addEventListener('deviceready', onDeviceReady, true);
-	//onDeviceReady();
-    
-	isPaused = false;
-	isMousePressed = false;
-	
-	// only for debug on web page
-	var userAgent = navigator.userAgent.toLowerCase();
-    if (!userAgent.match(/android/)) {
-		debug();
-	}
 	
 	setInterval(draw, Math.ceil(1000 / game.frameRate));
 }
@@ -238,7 +236,7 @@ function draw() {
 		}
 	}
 	// enlarge if mouse is pressed
-	if (isMousePressed) {
+	if (game.isMousePressed) {
 		bubble.enlargeBubble();
 	}
 	
@@ -320,7 +318,7 @@ function SmallFish(size) {
 	this.image.src = "images/fish01-" + size + ".png"
 	
 	this.left = 0 - this.image.width;
-	this.top = Math.ceil(Math.random() * (windowHeight - this.image.height - 400)) + 200;
+	this.top = Math.ceil(Math.random() * (windowHeight - this.image.height - 200)) + 100;
 	this.size = size;
 	this.vx = 20 / (size + 5);
 	this.vy = 0;
@@ -383,6 +381,8 @@ function GameManager() {
 	// height of shallow sea
 	this.shallowHeight = 20;
 	// height of deep sea is the rest
+	
+	this.isMousePressed = false;
 }
 
 
@@ -571,14 +571,15 @@ function AcceleratorManager() {
 	this.watchId = null;
 	
 	this.startWatch = function() {
-		alert("startWatch");
+		//alert("startWatch");
 		var options = {
 			frequency: 40 // 40ms, same as frame rate
 		};
-		if (navigator.accelerometer == null)
-		alert("null nav");
-		else
-		navigator.accelerometer.watchAcceleration(this.onSuccess, this.onError, options);
+		if (navigator.accelerometer == null) {
+		//alert("null nav");
+		} else {
+			navigator.accelerometer.watchAcceleration(this.onSuccess, this.onError, options);
+		}
 	}
 	
 	this.stopWatch = function() {
