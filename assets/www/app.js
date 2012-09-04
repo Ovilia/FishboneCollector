@@ -145,6 +145,7 @@ function init() {
 	board = new BoardManager();
 	accelerator = new AcceleratorManager();
 	score = new ScoreManager();
+	prompt = new PromptManager();
 	
 	setInterval(draw, Math.ceil(1000 / game.frameRate));
 }
@@ -225,10 +226,11 @@ function draw() {
                 		bubble.bubbleArray[i].fish.push(j);
                 		bubble.bubbleArray[i].vy = 0;
                 		
-                		score.bubbleFish(game.fishArray[j].size);
+                		score.bubbleFish(game.fishArray[j].size, 
+							game.fishArray[j].left, game.fishArray[j].top);
                 		var fishCnt = bubble.bubbleArray[i].fish.length;
                 		if (fishCnt > 1) {
-                			score.bonusMultiKill(fishCnt);
+                			score.bonusMultiKill(fishCnt, bubble.bubbleArray[i].x, bubble.bubbleArray[i].y);
                 		}
                     }
                 }
@@ -249,7 +251,7 @@ function draw() {
             	// move as not covered by bubble
 			    if (game.fishArray[i].left > windowWidth) {
 			    	if (game.fishArray[i].bubbleId == -1) {
-			    		score.missedFish();
+			    		score.missedFish(game.fishArray[i].left, game.fishArray[i].top);
 			    	}
 				    delete game.fishArray[i];
 				    continue;
@@ -260,7 +262,7 @@ function draw() {
 						board.top + (board.boardHeight - board.thickness) / 2.0 &&
 						game.fishArray[i].left > board.left && 
 						game.fishArray[i].left + game.fishArray[i].image.width < board.left + board.boardWidth) {
-					score.collectFish(game.fishArray[i].size);
+					score.collectFish(game.fishArray[i].size, game.fishArray[i].left, game.fishArray[i].top);
 					delete game.fishArray[i];
 					continue;
 				} else if (game.fishArray[i].top > windowHeight) {
@@ -308,6 +310,7 @@ function draw() {
 	board.draw();
 	
 	score.draw();
+	prompt.draw();
 }
 
 /*
@@ -494,11 +497,11 @@ function BubbleManager() {
 					} else {
 						// fish that is not all bone will still float up
 						game.fishArray[b.fish[i]].floatUp();
-						score.floatFish();
+						score.floatFish(game.fishArray[b.fish[i]].left, game.fishArray[b.fish[i]].top);
 					}
 				}
 			}
-			score.breakFishBubble();
+			score.breakFishBubble(this.bubbleArray[index].x, this.bubbleArray[index].y);
 			delete this.bubbleArray[index];
 		}
 	};
@@ -618,23 +621,26 @@ function ScoreManager() {
 	this.missedFish = function() {
 		this.fishMissed += 1;
 	}
-	this.bubbleFish = function(fishSize) { // call when a fish covered by bubble
+	this.bubbleFish = function(fishSize, left, top) { // call when a fish covered by bubble
 		this.fishBubbled += 1;
 		this.score += fishSize;
+		prompt.addScore(fishSize);
 	}
-	this.breakFishBubble = function() { // call when bubble that contain fish is broken
+	this.breakFishBubble = function(left, top) { // call when bubble that contain fish is broken
 		this.fishBubbleBroken += 1;
 		this.score += 1;
+		prompt.addScore(1, left, top);
 	}
 	this.floatFish = function() { // call when bubble be broken before fish become all bone
 		this.fishFloated += 1;
 	}
-	this.collectFish = function(fishSize) { // call when a fish touches board
+	this.collectFish = function(fishSize, left, top) { // call when a fish touches board
 		this.fishCollected += 1;
 		this.score += fishSize * 2;
+		prompt.addScore(fishSize * 2, left, top);
 	}
 	
-	this.bonusMultiKill = function(fishCnt) {
+	this.bonusMultiKill = function(fishCnt, left, top) {
 		if (this.multiKill[fishCnt]) {
 			this.multiKill[fishCnt] += 1;
 		} else {
@@ -646,6 +652,7 @@ function ScoreManager() {
 			}
 		}
 		this.score += 5 * fishCnt * fishCnt;
+		prompt.addScore(5 * fishCnt * fishCnt, left, top);
 	}
 	
 	this.margin = 10;
@@ -659,5 +666,76 @@ function ScoreManager() {
 		ctx.strokeText(this.score, this.left + this.margin, this.top + this.margin);
 	}
 }
+
+// Prompt information displayed, like score and bonus
+function PromptManager() {
+	this.scoreArray = [];
+	this.bonusArray = [];
+	
+	this.addScore = function(score, left, top) {
+		var size = 0.2 + (score / 50.0);
+		if (size > 1.0) {
+			size = 1.0;
+		}
+		var s = {
+			"score": score,
+			"life": 50, // frames
+			"age": 0,
+			"left": left,
+			"top": top,
+			"size": size
+		};
+		this.scoreArray.push(s);
+	}
+	
+	this.addBonus = function(bonusStr, left, top) {
+		var b = {
+			"bonusStr": bonusStr,
+			"life": 75,
+			"age": 0,
+			"left": left,
+			"top": top
+		}
+		this.bonusArray.push(b);
+	}
+	
+	this.draw = function() {
+		// draw score
+		var sLen = this.scoreArray.length;
+		for (var i = 0; i < sLen; ++i) {
+			if (this.scoreArray[i]) {
+				var width = this.plusImage.width * this.scoreArray[i].size;
+				var height = this.plusImage.height * this.scoreArray[i].size;
+				var left = this.scoreArray[i].left;
+				var top = this.scoreArray[i].top;
+				// draw plus
+				ctx.drawImage(this.plusImage, left, top, width, height);
+				left += width;
+				// draw number
+				var str = this.scoreArray[i].score.toString();
+				var len = str.length;
+				for (var j = 0; j < len; ++j) {
+					var id = parseInt(str[j]);
+					ctx.drawImage(this.numImage[id], left, top, width, height);
+					left += width;
+				}
+				// grow old
+				this.scoreArray[i].age += 1;
+				if (this.scoreArray[i].age >= this.scoreArray[i].life) {
+					// die, delete it 
+					delete this.scoreArray[i];
+				}
+			}
+		}
+	}
+}
+PromptManager.prototype.numImage = [];
+for (var i = 0; i < 10; ++i) {
+	var numImg = new Image();
+	numImg.src = "images/prompt/" + i.toString() + ".png";
+	PromptManager.prototype.numImage.push(numImg);
+}
+PromptManager.prototype.plusImage = new Image();
+PromptManager.prototype.plusImage.src = "images/prompt/+.png";
 
 
