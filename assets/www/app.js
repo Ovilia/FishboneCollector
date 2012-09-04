@@ -654,16 +654,43 @@ function ScoreManager() {
 	}
 	
 	this.margin = 10;
-	this.top = 30;
-	this.left = 30;
+	this.top = 25;
+	this.left = 10;
 	this.draw = function() {
 		ctx.fillStyle = "#c60";
 		ctx.strokeStyle = "#ff0";
-		ctx.font = '40px Calibri';
-		ctx.fillText(this.score, this.left + this.margin, this.top + this.margin);
-		ctx.strokeText(this.score, this.left + this.margin, this.top + this.margin);
+		ctx.font = '25px Calibri';
+		
+		// fish with bubble
+		var left = this.margin + this.left;
+		var top = this.margin;
+		var textTop = this.margin + this.top;
+		ctx.drawImage(this.bubbleImg, left, top, this.bubbleImg.width, this.bubbleImg.height);
+		left += this.bubbleImg.width + 5;
+		ctx.fillText(this.fishBubbled, left, textTop);
+		ctx.strokeText(this.fishBubbled, left, textTop);
+		left += 50;
+		
+		// fish collected
+		ctx.drawImage(this.boneImg, left, top, this.boneImg.width, this.boneImg.height);
+		left += this.boneImg.width + 5;
+		ctx.fillText(this.fishCollected, left, textTop);
+		ctx.strokeText(this.fishCollected, left, textTop);
+		left += 50;
+		
+		// score
+		ctx.drawImage(this.starImg, left, top, this.starImg.width, this.starImg.height);
+		left += this.starImg.width + 5;
+		ctx.fillText(this.score, left, textTop);
+		ctx.strokeText(this.score, left, textTop);
 	}
 }
+ScoreManager.prototype.bubbleImg = new Image();
+ScoreManager.prototype.bubbleImg.src = "images/fish_bubble.png";
+ScoreManager.prototype.boneImg = new Image();
+ScoreManager.prototype.boneImg.src = "images/fish_bone.png";
+ScoreManager.prototype.starImg = new Image();
+ScoreManager.prototype.starImg.src = "images/star.png";
 
 // Prompt information displayed, like score and bonus
 function PromptManager() {
