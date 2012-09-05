@@ -9,3 +9,8 @@ body
     margin: 0px;
     padding: 0px;
 }
+
+.ui-content
+{
+    padding: 0px;
+}

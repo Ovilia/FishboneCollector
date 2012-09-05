@@ -1,17 +1,38 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		
+		<link rel="stylesheet" href="jquery.mobile/jquery.mobile-1.1.1.css" />
 		<link rel="stylesheet" href="app.css" />
 		
 		<script type="text/javascript" charset="utf-8" src="jquery.mobile/jquery.js"></script>
+		<script type="text/javascript" charset="utf-8" src="jquery.mobile/jquery.mobile-1.1.1.js"></script>
 		<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
-		<script type="text/javascript" charset="utf-8" src="app.js"></script>
+		
+		<script type="text/javascript" charset="utf-8" src="global.js"></script>
+		<script type="text/javascript" charset="utf-8" src="home.js"></script>
+		<script type="text/javascript" charset="utf-8" src="level.js"></script>
+		<script type="text/javascript" charset="utf-8" src="game.js"></script>
 	</head>
 	<body>
-		<div id="gameDiv">
-			<canvas id="canvas">Canvas is not supported</canvas>
+		<div data-role="page" id="homePage">
+			<div data-role="content" id="homeContent">
+				<canvas id="homeCanvas">Canvas is not supported</canvas>
+			</div>
+		</div><!-- homePage -->
+		
+		<div data-role="page" id="levelPage">
+			<div data-role="content" id="homeContent">
+				<canvas id="levelCanvas">Canvas is not supported</canvas>
+			</div>
+		</div>
+		
+		<div data-role="page" id="gamePage">
+			<div data-role="content" id="homeContent">
+				<canvas id="gameCanvas">Canvas is not supported</canvas>
+			</div>
 		</div>
 	</body>
 </html>

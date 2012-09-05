@@ -1,169 +1,97 @@
-$(document).ready(function() {
-	windowWidth = window.localStorage.getItem("windowWidth");
-	windowHeight = window.localStorage.getItem("windowHeight");
- 
-	$("#canvas").attr("width", windowWidth).attr("height", windowHeight);
-	var canvas = $("#canvas").get(0);
+function initGame() {
+	var canvas = $("#gameCanvas").get(0);
 	
 	if(canvas) {
 		ctx = canvas.getContext('2d');
 		
-		//document.addEventListener('deviceready', onDeviceReady, false);
-		onDeviceReady();
-		
-		// only for debug on web page
-		var userAgent = navigator.userAgent.toLowerCase();
-		if (!userAgent.match(/android/)) {
-			init();
-			debug();
-		}
+		// level information in local storage
+		var level = 1;//window.localStorage.getItem("level");
+		var script = document.createElement('script');
+		script.src = "levels/teach" + level + ".js";
+		script.type = 'text/javascript';
+		$('head')[0].appendChild(script);
 	
-	}
-});
-
-function debug() {
-	$('#canvas').mousedown(function(e) {
-		game.isMousePressed = true;
-		var x = e.pageX;
-		var y = e.pageY;
+		game = new GameManager();
+		energy = new EnergyManager();
+		bubble = new BubbleManager();
+		board = new BoardManager();
+		accelerator = new AcceleratorManager();
+		score = new ScoreManager();
+		prompt = new PromptManager();
 		
-		// check if touch within bubble
-		var withinBbId = -1;
-		var len = bubble.bubbleArray.length;
-		for (var i = 0; i < len; ++i) {
-			// not active
-			if (bubble.bubbleArray[i] && bubble.bubbleArray[i].active === false &&
-				// covering fish
-				bubble.bubbleArray[i].fish.length > 0 &&
-				// touch within bubble
-				(Math.abs(bubble.bubbleArray[i].x - x) < bubble.bubbleArray[i].energy * bubble.image.width) &&
-				(Math.abs(bubble.bubbleArray[i].y - y) < bubble.bubbleArray[i].energy * bubble.image.height)) {
-					withinBbId = i;
-					break;
-			}
-		}
-		if (withinBbId == -1) {
-			// not within bubble, add a bubble
-			bubble.addBubble(x, y);
-		} else {
-			// touch within bubble will break the bubble
-			bubble.breakBubble(withinBbId);
-		}
-	});
-	$('#canvas').mouseup(function(e) {
-		game.isMousePressed = false;
-		var len = bubble.bubbleArray.length;
-		if (len > 0 && bubble.bubbleArray[len - 1]) {
-			bubble.bubbleArray[len - 1].active = false;
-		}
-	});
-	$('#canvas').mousemove(function(e) {
-		if (game.isMousePressed) {
-			var len = bubble.bubbleArray.length;
-			if (len > 0 && bubble.bubbleArray[len - 1] &&
-					bubble.bubbleArray[len - 1].active === true) {
-				bubble.bubbleArray[len - 1].x = e.pageX;
-				bubble.bubbleArray[len - 1].y = e.pageY;
-			}
-		}
-	});
-	$(document).keypress(function(e) {
-		if (e.which == 122) { // z to move left
-			board.vx -= 10;
-		} else if (e.which == 120) { // x to move right
-			board.vx += 10;
-		}
-	});
+		setInterval(drawGame, Math.ceil(1000 / fcGlobal.frameRate));
+		fcGlobal.frameCnt = 0;
+	}
 }
 
-function onDeviceReady() {
-	//alert("ready");
-	init();
-	
-    accelerator.startWatch();
-	
-	document.body.addEventListener("touchstart", function(e){
-		e.preventDefault();
-		game.isMousePressed = true;
+function gameTouchStart(e) {
+	game.isTouched = true;
+	if (e.changedTouches) {
 		var x = e.changedTouches[0].pageX;
 		var y = e.changedTouches[0].pageY;
-		
-		// check if touch within bubble
-		var withinBbId = -1;
-		var len = bubble.bubbleArray.length;
-		for (var i = 0; i < len; ++i) {
-			// not active
-			if (bubble.bubbleArray[i] && bubble.bubbleArray[i].active === false &&
-				// covering fish
-				bubble.bubbleArray[i].fish.length > 0 &&
-				// touch within bubble
-				(Math.abs(bubble.bubbleArray[i].x - x) < bubble.bubbleArray[i].energy * bubble.image.width) &&
-				(Math.abs(bubble.bubbleArray[i].y - y) < bubble.bubbleArray[i].energy * bubble.image.height)) {
-					withinBbId = i;
-					break;
-			}
-		}
-		if (withinBbId == -1) {
-			// not within bubble, add a bubble
-			bubble.addBubble(x, y);
-		} else {
-			// touch within bubble will break the bubble
-			bubble.breakBubble(withinBbId);
-		}
-	}, false);
-    document.body.addEventListener('touchmove', function(e) {
-		if (game.isMousePressed) {
-			var len = bubble.bubbleArray.length;
-			if (len > 0 && bubble.bubbleArray[len - 1] &&
-					bubble.bubbleArray[len - 1].active === true) {
-				bubble.bubbleArray[len - 1].x = e.changedTouches[0].pageX;
-				bubble.bubbleArray[len - 1].y = e.changedTouches[0].pageY;
-			}
-		}
-    }, false);
-    document.body.addEventListener('touchend', function(e) {
-		game.isMousePressed = false;
-		var len = bubble.bubbleArray.length;
-		if (len > 0 && bubble.bubbleArray[len - 1]) {
-			bubble.bubbleArray[len - 1].active = false;
-		}
-    }, false);
-    
-}
-
-function init() {
-	// level information in local storage
-	var level = window.localStorage.getItem("level");
-	var script = document.createElement('script');
-	script.src = "levels/teach" + level + ".js";
-	script.type = 'text/javascript';
-	$('head')[0].appendChild(script);
-
-	game = new GameManager();
-	energy = new EnergyManager();
-	bubble = new BubbleManager();
-	board = new BoardManager();
-	accelerator = new AcceleratorManager();
-	score = new ScoreManager();
-	prompt = new PromptManager();
+	} else {
+		// debug on web page
+		var x = e.pageX;
+		var y = e.pageY;
+	}
 	
-	setInterval(draw, Math.ceil(1000 / game.frameRate));
+	// check if touch within bubble
+	var withinBbId = -1;
+	var len = bubble.bubbleArray.length;
+	for (var i = 0; i < len; ++i) {
+		// not active
+		if (bubble.bubbleArray[i] && bubble.bubbleArray[i].active === false &&
+			// covering fish
+			bubble.bubbleArray[i].fish.length > 0 &&
+			// touch within bubble
+			(Math.abs(bubble.bubbleArray[i].x - x) < bubble.bubbleArray[i].energy * bubble.image.width) &&
+			(Math.abs(bubble.bubbleArray[i].y - y) < bubble.bubbleArray[i].energy * bubble.image.height)) {
+				withinBbId = i;
+				break;
+		}
+	}
+	if (withinBbId == -1) {
+		// not within bubble, add a bubble
+		bubble.addBubble(x, y);
+	} else {
+		// touch within bubble will break the bubble
+		bubble.breakBubble(withinBbId);
+	}
 }
 
-function draw() {
-	++game.frameCnt;
+function gameTouchMove(e) {
+	if (game.isTouched) {
+		var len = bubble.bubbleArray.length;
+		if (len > 0 && bubble.bubbleArray[len - 1] &&
+				bubble.bubbleArray[len - 1].active === true) {
+			bubble.bubbleArray[len - 1].x = e.changedTouches[0].pageX;
+			bubble.bubbleArray[len - 1].y = e.changedTouches[0].pageY;
+		}
+	}
+}
+
+function gameTouchEnd(e) {
+	game.isTouched = false;
+	var len = bubble.bubbleArray.length;
+	if (len > 0 && bubble.bubbleArray[len - 1]) {
+		bubble.bubbleArray[len - 1].active = false;
+	}
+}
+
+function drawGame() {
+	ctx.clearRect(0, 0, fcGlobal.windowWidth, fcGlobal.windowHeight);
+	++fcGlobal.frameCnt;
+	
 	// check if to add or delete fish
 	fishManager();
-	
-	ctx.clearRect(0, 0, windowWidth, windowHeight);
 	
 	// background of sky and sea
 	// shallow sea
 	ctx.fillStyle = "#8ED6FF";
-	ctx.fillRect(0, 0, windowWidth, game.shallowHeight);
+	ctx.fillRect(0, 0, fcGlobal.windowWidth, game.shallowHeight);
 	// deep sea
 	ctx.fillStyle = "#5483ca";
-	ctx.fillRect(0, game.shallowHeight, windowWidth, windowHeight - game.shallowHeight);
+	ctx.fillRect(0, game.shallowHeight, fcGlobal.windowWidth, fcGlobal.windowHeight - game.shallowHeight);
 	
 	// energy ball
 	energy.addOrdEnergy();
@@ -185,16 +113,16 @@ function draw() {
 				// float up
 				bubble.bubbleArray[i].vy += bubble.bubbleArray[i].energy * 0.08;
 				bubble.bubbleArray[i].y -= bubble.bubbleArray[i].vy;
-				if (game.frameCnt % 3 == 0) {
+				if (fcGlobal.frameCnt % 3 == 0) {
 					bubble.bubbleArray[i].vx = Math.random() * 6 - 3;
 				}
 				bubble.bubbleArray[i].x += bubble.bubbleArray[i].vx;
 				
 				// delete those outside of the screen
 				if (bubble.bubbleArray[i].x < -bubble.image.width || 
-					bubble.bubbleArray[i].x - bubble.image.width > windowWidth ||
+					bubble.bubbleArray[i].x - bubble.image.width > fcGlobal.windowWidth ||
 					bubble.bubbleArray[i].y < -bubble.image.height || 
-					bubble.bubbleArray[i].y - bubble.image.height > windowHeight) {
+					bubble.bubbleArray[i].y - bubble.image.height > fcGlobal.windowHeight) {
 						delete bubble.bubbleArray[i];
                         continue;
 				}
@@ -233,7 +161,7 @@ function draw() {
 		}
 	}
 	// enlarge if mouse is pressed
-	if (game.isMousePressed) {
+	if (game.isTouched) {
 		bubble.enlargeBubble();
 	}
 	
@@ -244,7 +172,7 @@ function draw() {
 			game.fishArray[i].move();
             if (game.fishArray[i].bubbleId == -1) {
             	// move as not covered by bubble
-			    if (game.fishArray[i].left > windowWidth) {
+			    if (game.fishArray[i].left > fcGlobal.windowWidth) {
 			    	if (game.fishArray[i].bubbleId == -1) {
 			    		score.missedFish(game.fishArray[i].left, game.fishArray[i].top);
 			    	}
@@ -260,7 +188,7 @@ function draw() {
 					score.collectFish(game.fishArray[i].size, game.fishArray[i].left, game.fishArray[i].top);
 					delete game.fishArray[i];
 					continue;
-				} else if (game.fishArray[i].top > windowHeight) {
+				} else if (game.fishArray[i].top > fcGlobal.windowHeight) {
 					// TODO: effect here
 					delete game.fishArray[i];
 					continue;
@@ -316,7 +244,7 @@ function SmallFish(size) {
 	this.image.src = "images/fish01-" + size + ".png"
 	
 	this.left = 0 - this.image.width;
-	this.top = Math.ceil(Math.random() * (windowHeight - this.image.height - 200)) + 100;
+	this.top = Math.ceil(Math.random() * (fcGlobal.windowHeight - this.image.height - 200)) + 100;
 	this.size = size;
 	this.vx = 20 / (size + 5);
 	this.vy = 0;
@@ -366,9 +294,6 @@ SmallFish.prototype.boneImage.src = "images/fishbone.png";
 
 
 function GameManager() {
-	this.frameRate = 25; // 25 frames each second
-	this.frameCnt = 0;
-	
 	this.fishArray = [];
 	this.fishTotal = 0;
 	
@@ -378,7 +303,7 @@ function GameManager() {
 	this.shallowHeight = 20;
 	// height of deep sea is the rest
 	
-	this.isMousePressed = false;
+	this.isTouched = false;
 }
 
 
@@ -408,7 +333,7 @@ function EnergyManager() {
 	this.margin = 10;
 	this.radius = 50;
 	this.innerRadius = 25;
-	this.left = windowWidth - this.radius * 2 - this.margin;
+	this.left = fcGlobal.windowWidth - this.radius * 2 - this.margin;
 	this.top = this.margin;
 	this.centerX = this.left + this.radius;
 	this.centerY = this.top + this.radius;
@@ -511,7 +436,7 @@ function BoardManager() {
 	this.boardWidth = 200; // contain head part
 	this.boardHeight = 50;
 	this.thickness = 10;
-	this.left = Math.ceil((windowWidth - this.boardWidth) / 2);
+	this.left = Math.ceil((fcGlobal.windowWidth - this.boardWidth) / 2);
 	
 	this.vx = 0;
 	
@@ -519,8 +444,8 @@ function BoardManager() {
 		this.left += this.vx;
 		if (this.left < 0) {
 			this.left = 0;
-		} else if (this.left > windowWidth - this.boardWidth) {
-			this.left = windowWidth - this.boardWidth;
+		} else if (this.left > fcGlobal.windowWidth - this.boardWidth) {
+			this.left = fcGlobal.windowWidth - this.boardWidth;
 		}
 		
 		// resistance force
@@ -536,7 +461,7 @@ function BoardManager() {
 		ctx.beginPath();
 		ctx.arc(this.left + this.headRadius, this.top + this.headRadius,
 			    this.headRadius, 0, 2 * Math.PI, false);
-		ctx.fillStyle = "hsl(" + (game.frameCnt % 256) + ", 50%, 50%)";
+		ctx.fillStyle = "hsl(" + (fcGlobal.frameCnt % 256) + ", 50%, 50%)";
 		ctx.fill();
 		
 		// tail
@@ -558,7 +483,7 @@ function BoardManager() {
 BoardManager.prototype.image = new Image();
 BoardManager.prototype.image.onload = function() {
 	BoardManager.prototype.marginBottom = 20;
-	BoardManager.prototype.top = windowHeight - 
+	BoardManager.prototype.top = fcGlobal.windowHeight - 
 		BoardManager.prototype.image.height - BoardManager.prototype.marginBottom;
 	BoardManager.prototype.headRadius = BoardManager.prototype.image.width / 2;
 }
@@ -570,16 +495,17 @@ function AcceleratorManager() {
 	this.watchId = null;
 	
 	this.startWatch = function() {
-		//alert("startWatch");
+		alert("startWatch");
 		var options = {
 			frequency: 40 // 40ms, same as frame rate
 		};
 		if (navigator.accelerometer == null) {
-		//alert("null nav");
+			alert("null nav");
 		} else {
 			navigator.accelerometer.watchAcceleration(this.onSuccess, this.onError, options);
 		}
 	}
+	this.startWatch();
 	
 	this.stopWatch = function() {
 		if (this.watchId) {
@@ -590,6 +516,9 @@ function AcceleratorManager() {
 	
 	this.onSuccess = function(acceleration) {
 		board.vx -= acceleration.z;
+		alert('Acceleration X: ' + acceleration.x + '\n' +
+			'Acceleration Y: ' + acceleration.y + '\n' +
+			'Acceleration Z: ' + acceleration.z);
 	}
 	
 	this.onError = function() {
@@ -736,8 +665,8 @@ function PromptManager() {
 				var height = this.plusImage.height * this.scoreArray[i].size;
 				var left = this.scoreArray[i].left;
 				var totalWidth = width * (str.length + 1);
-				if (left + totalWidth > windowWidth) {
-					left = windowWidth - totalWidth;
+				if (left + totalWidth > fcGlobal.windowWidth) {
+					left = fcGlobal.windowWidth - totalWidth;
 				}
 				var top = this.scoreArray[i].top;
 				// draw plus
@@ -770,7 +699,7 @@ function PromptManager() {
 				var img = this.bonusImg[this.bonusArray[i].bonusId];
 				var width = img.width * rate;
 				var height = img.height * rate;
-				var left = (windowWidth - width) / 2;
+				var left = (fcGlobal.windowWidth - width) / 2;
 				var top = 10;
 				ctx.drawImage(img, left, top, width, height);
 				
@@ -816,5 +745,3 @@ for (var i = 2; i <= 6; ++i) {
 	img.src = "images/prompt/kill" + i + ".png";
 	PromptManager.prototype.bonusImg.push(img);
 }
-
-
